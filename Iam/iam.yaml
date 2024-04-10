@@ -1,0 +1,39 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deplot IAM group and user
+
+Parameters:
+  pGroupname:
+    Description: Group name
+    Type: String
+
+  pUsername:
+    Description: User name
+    Type: String
+
+  pPassword:
+    Description: User password
+    Type: String
+
+Resources:
+  rgroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: !Ref pGroupname
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+      Path: /
+
+  ruser:
+    Type: AWS::IAM::User
+    Properties:
+      Groups: 
+        - !Ref rgroup
+      LoginProfile: 
+        Password: !Ref pPassword
+        PasswordResetRequired: True
+
+      Path: /
+      UserName: !Ref pUsername
+
+
