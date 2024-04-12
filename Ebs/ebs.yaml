@@ -1,0 +1,17 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy a basic ebs
+
+Parameters:
+  paz:
+    Description: AZ name
+    Type: String
+
+Resources:
+  rebs:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone: !Ref paz
+      Encrypted: false
+      Size: 100
+      VolumeType: gp3
