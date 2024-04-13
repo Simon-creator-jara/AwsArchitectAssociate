@@ -1,0 +1,185 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy a basic efs
+
+Parameters:
+  pprofilename:
+    Description: Instance profile name
+    Type: String
+  
+  prolename:
+    Description: Role name for instance profile
+    Type: String
+
+  pscgroupname:
+    Description: Sec group for ec2
+    Type: String
+  
+  pvpcId:
+    Description: vpc ID
+    Type: String
+
+  psubnetId:
+    Description: subnet ID
+    Type: String
+
+Resources:
+
+  rSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EC2 security group
+      GroupName: !Ref pscgroupname
+      SecurityGroupEgress: 
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref pvpcId
+
+  rSecGroupEFS:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EFS security group
+      GroupName: !Join ["-",[!Ref pscgroupname,"efs"]]
+      SecurityGroupEgress: 
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+      VpcId: !Ref pvpcId
+
+  rSecGroupEc2:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EC2 security group
+      GroupName: !Join ["-",[!Ref pscgroupname,"ec2"]]
+      VpcId: !Ref pvpcId
+
+  OutboundRuleEFS:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 2049
+      ToPort: 2049
+      DestinationSecurityGroupId:
+        Fn::GetAtt:
+          - rSecGroupEFS
+          - GroupId
+      GroupId:
+        Fn::GetAtt:
+          - rSecGroupEc2
+          - GroupId
+
+  InboundRuleEC2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 2049
+      ToPort: 2049
+      SourceSecurityGroupId:
+        Fn::GetAtt:
+          - rSecGroupEc2
+          - GroupId
+      GroupId:
+        Fn::GetAtt:
+          - rSecGroupEFS
+          - GroupId
+
+  rRole: 
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: Role for instance profile
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+      Path: /
+      RoleName: !Ref prolename
+
+
+
+  rInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Ref pprofilename
+      Path: /
+      Roles: 
+        - !Ref rRole
+
+  rfs:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: false
+      PerformanceMode: generalPurpose
+      ThroughputMode: elastic
+
+  MountTargetResource3:
+    Type: AWS::EFS::MountTarget
+    DependsOn: [rfs,rSecGroupEFS]
+    Properties:
+      FileSystemId: !Ref rfs
+      SubnetId: !Ref psubnetId
+      SecurityGroups:
+      - !Ref rSecGroupEFS
+
+  rInstance:
+    
+    Type: AWS::EC2::Instance
+    DependsOn: [rfs,MountTargetResource3]
+    Properties:
+      AvailabilityZone: "us-east-1b"
+      BlockDeviceMappings: 
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 50
+            DeleteOnTermination: true 
+        - DeviceName: /dev/sdf
+          Ebs:
+            VolumeSize: 120
+            DeleteOnTermination: true
+      IamInstanceProfile: !Ref rInstanceProfile
+      ImageId: ami-051f8a213df8bc089
+      InstanceType: t2.micro
+      KeyName: jumpbox
+      SecurityGroupIds: 
+        - !Ref rSecGroup
+        - !Ref rSecGroupEc2
+      SubnetId: !Ref psubnetId
+      UserData: 
+            Fn::Base64:
+              !Sub | 
+                #!/bin/bash
+                yum update -y
+                yum install -y httpd
+                yum -y install epel-release
+                yum -y install htop
+                sudo yum install awscli
+                sudo mkfs -t xfs /dev/xvdf
+                sudo mkdir /data
+                sudo mount /dev/xvdf /data
+                systemctl start httpd
+                systemctl enable httpd
+                yum install -y amazon-efs-utils
+                mkdir efs
+
+
+
+
+
+
+
+
+ 
