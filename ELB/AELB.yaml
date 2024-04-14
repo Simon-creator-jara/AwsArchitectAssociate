@@ -1,0 +1,230 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy a basic 
+
+Parameters:
+  pprofilename:
+    Description: Instance profile name
+    Type: String
+  
+  prolename:
+    Description: Role name for instance profile
+    Type: String
+
+  pscgroupname:
+    Description: Sec group for ec2
+    Type: String
+  
+  pvpcId:
+    Description: vpc ID
+    Type: String
+
+  psubnetId:
+    Description: subnet ID
+    Type: String
+    
+  psubnetId2:
+    Description: subnet ID
+    Type: String
+
+  pnameELB:
+    Description: Name ELB
+    Type: String
+
+Resources:
+
+  rSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EC2 security group
+      GroupName: !Ref pscgroupname
+      SecurityGroupEgress: 
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref pvpcId
+
+  rSecGroupELB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EC2 security group elb
+      GroupName: !Join ["-",[!Ref pscgroupname,"elb"]]
+      SecurityGroupEgress: 
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref pvpcId
+  
+  InboundRuleEC2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId:
+        Fn::GetAtt:
+          - rSecGroupELB
+          - GroupId
+      GroupId:
+        Fn::GetAtt:
+          - rSecGroup
+          - GroupId
+
+
+  rRole: 
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: Role for instance profile
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+      Path: /
+      RoleName: !Ref prolename
+
+
+
+  rInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Ref pprofilename
+      Path: /
+      Roles: 
+        - !Ref rRole
+
+  rInstance1:
+
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: "us-east-1b"
+      BlockDeviceMappings: 
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 50
+            DeleteOnTermination: true 
+        - DeviceName: /dev/sdf
+          Ebs:
+            VolumeSize: 120
+            DeleteOnTermination: true
+      IamInstanceProfile: !Ref rInstanceProfile
+      ImageId: ami-051f8a213df8bc089
+      InstanceType: t2.micro
+      KeyName: jumpbox
+      SecurityGroupIds: 
+        - !Ref rSecGroup
+      SubnetId: !Ref psubnetId
+      UserData: 
+            Fn::Base64:
+              !Sub | 
+                #!/bin/bash
+                yum update -y
+                yum install -y httpd
+                yum -y install epel-release
+                yum -y install htop
+                sudo yum install awscli
+                sudo mkfs -t xfs /dev/xvdf
+                sudo mkdir /data
+                sudo mount /dev/xvdf /data
+                systemctl start httpd
+                systemctl enable httpd
+                echo "<h1>Hello Mundo from $(hostname -f) </h1>" > /var/www/html/index.html
+
+  rInstance2:
+
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: "us-east-1b"
+      BlockDeviceMappings: 
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 50
+            DeleteOnTermination: true 
+        - DeviceName: /dev/sdf
+          Ebs:
+            VolumeSize: 120
+            DeleteOnTermination: true
+      IamInstanceProfile: !Ref rInstanceProfile
+      ImageId: ami-051f8a213df8bc089
+      InstanceType: t2.micro
+      KeyName: jumpbox
+      SecurityGroupIds: 
+        - !Ref rSecGroup
+      SubnetId: !Ref psubnetId
+      UserData: 
+            Fn::Base64:
+              !Sub | 
+                #!/bin/bash
+                yum update -y
+                yum install -y httpd
+                yum -y install epel-release
+                yum -y install htop
+                sudo yum install awscli
+                sudo mkfs -t xfs /dev/xvdf
+                sudo mkdir /data
+                sudo mount /dev/xvdf /data
+                systemctl start httpd
+                systemctl enable httpd
+                echo "<h1>Hello Mundo from $(hostname -f) </h1>" > /var/www/html/index.html
+
+
+  rELB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      Name: !Ref pnameELB
+      Scheme: internet-facing
+      SecurityGroups: 
+        - !Ref rSecGroupELB
+      Subnets: 
+        - !Ref psubnetId
+        - !Ref psubnetId2
+      Type: application
+  
+  rTargetGroup:
+    DependsOn: [rInstance2,rInstance1]
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckPort: 80
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 3
+      IpAddressType: ipv4
+      Name: String
+      Port: 80
+      Protocol: HTTP
+      Targets: 
+        - Id: !Ref rInstance2
+        - Id: !Ref rInstance1
+      TargetType: instance
+      UnhealthyThresholdCount: 3
+      VpcId: !Ref pvpcId
+
+  rlistener:
+    DependsOn: [rTargetGroup]
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref rELB
+      DefaultActions: 
+        - TargetGroupArn: !Ref rTargetGroup
+          Type: forward
+      Port: 80
+      Protocol: HTTP 
+
