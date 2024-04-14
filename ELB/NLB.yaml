@@ -193,7 +193,7 @@ Resources:
       Subnets: 
         - !Ref psubnetId
         - !Ref psubnetId2
-      Type: application
+      Type: network
   
   rTargetGroup:
     DependsOn: [rInstance2,rInstance1]
@@ -209,20 +209,13 @@ Resources:
       IpAddressType: ipv4
       Name: String
       Port: 80
-      Protocol: HTTP
+      Protocol: TCP
       Targets: 
         - Id: !Ref rInstance2
         - Id: !Ref rInstance1
       TargetType: instance
       UnhealthyThresholdCount: 3
       VpcId: !Ref pvpcId
-      TargetGroupAttributes: 
-        - Key: stickiness.enabled
-          Value: true
-        - Key: stickiness.type
-          Value: lb_cookie
-        - Key: stickiness.lb_cookie.duration_seconds
-          Value: 604800
 
   rlistener:
     DependsOn: [rTargetGroup]
@@ -233,5 +226,4 @@ Resources:
         - TargetGroupArn: !Ref rTargetGroup
           Type: forward
       Port: 80
-      Protocol: HTTP 
-
+      Protocol: TCP 
