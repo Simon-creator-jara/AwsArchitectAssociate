@@ -1,0 +1,79 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy rds
+
+Parameters:
+
+  pscgroupname:
+    Description: Sec group for ec2
+    Type: String
+  
+  pvpcId:
+    Description: vpc ID
+    Type: String
+
+  pUsername:
+    Description: User RDS
+    Type: String
+
+  pPassword:
+    Description: Password RDS
+    Type: String
+
+  psubnetId:
+    Description: subnet ID
+    Type: String
+
+Resources:
+
+  rSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EC2 security group
+      GroupName: !Ref pscgroupname
+      SecurityGroupEgress: 
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref pvpcId
+  
+  rDBsec:
+    Type: AWS::RDS::DBSecurityGroup
+    Properties:
+      DBSecurityGroupIngress: 
+        - EC2SecurityGroupId: !Ref rSecGroup
+      EC2VpcId: !Ref pvpcId
+      GroupDescription: Prueba RDS
+
+  rRDS:
+    DependsOn: [rDBsec]
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 20
+      BackupRetentionPeriod: 7
+      DBInstanceClass: db.t3.micro
+      DBInstanceIdentifier: database-1
+      DBName: mydb
+      DBSubnetGroupName: !Ref psubnetId
+      DBSecurityGroups: 
+        - !Ref rDBsec
+      DeletionProtection: false
+      EnableIAMDatabaseAuthentication: false
+      EnablePerformanceInsights: false
+      Engine: mysql
+      LicenseModel: general-public-license
+      ManageMasterUserPassword: false
+      MasterUsername: !Ref pUsername
+      MasterUserPassword: !Ref pPassword
+      MaxAllocatedStorage: 1000
+      MultiAZ: false
+      NetworkType: IPV4
+      Port: 3306
+      PubliclyAccessible: true
+      StorageEncrypted: false
+      StorageType: gp2
+      UseDefaultProcessorFeatures: true
