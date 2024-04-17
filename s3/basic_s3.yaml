@@ -7,7 +7,7 @@ Parameters:
     Description: s3 name
     Type: String
     Default: lab1pacho
-    
+
 Resources:
   rs3:
     Type: AWS::S3::Bucket
@@ -18,3 +18,18 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: "AES256"
       BucketName: !Ref ps3
+
+  SampleBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref rs3
+      PolicyDocument:
+
+        Version: "2012-10-17"
+        Statement: 
+
+          - Action: 
+              - "s3:GetObject"
+            Effect: "Allow"
+            Resource: "arn:aws:s3:::estudio-s3/*"
+            Principal: "*"
