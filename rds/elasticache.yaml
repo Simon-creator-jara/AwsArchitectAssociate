@@ -1,0 +1,58 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy rds
+
+Parameters:
+
+  psubnetId:
+    Description: subnet ID
+    Type: String
+
+  pscgroupname:
+    Description: Sec group for ec2
+    Type: String
+  
+  pvpcId:
+    Description: vpc ID
+    Type: String
+
+
+Resources:
+
+  rSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EC2 security group
+      GroupName: !Ref pscgroupname
+      SecurityGroupEgress: 
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref pvpcId
+
+  rSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      CacheSubnetGroupName: demo-redis
+      Description: Subnetgroup for redis demo
+      SubnetIds: 
+        - !Ref psubnetId
+
+  rCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      AZMode: single-az
+      CacheNodeType: cache.t2.micro
+      CacheSubnetGroupName: !Ref rSubnetGroup
+      ClusterName: demoRedisCloud
+      Engine: redis
+      IpDiscovery: ipv4
+      NetworkType: ipv4
+      NumCacheNodes: 1
+      Port: 6379
+      VpcSecurityGroupIds: 
+        - !Ref rSecGroup
