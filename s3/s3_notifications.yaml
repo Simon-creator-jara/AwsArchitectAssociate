@@ -1,0 +1,52 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy a basic efs
+
+Parameters:
+  ps3:
+    Description: s3 name
+    Type: String
+    Default: lab1pacho
+
+Resources:
+
+  rSQS:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: demo-sqs-s3
+      SqsManagedSseEnabled: true
+
+  rPolicyQueue:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument: {
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "s3.amazonaws.com"
+            },
+            "Action": [
+              "SQS:*"
+            ],
+            "Resource": !GetAtt rSQS.Arn
+          }
+        ]
+      }
+      Queues: 
+        - !Ref rSQS
+
+  rs3:
+    Type: AWS::S3::Bucket
+    DependsOn: [rSQS,rPolicyQueue]
+    Properties: 
+      AccessControl: Private
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: s3:ObjectCreated:*
+            Queue: !GetAtt rSQS.Arn
+      BucketName: !Ref ps3
