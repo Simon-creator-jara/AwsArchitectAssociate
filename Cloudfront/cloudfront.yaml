@@ -60,6 +60,6 @@ Resources:
             Effect: "Allow"
             Resource: !Join ["",[!GetAtt rs3.Arn,"/*"]]
             Principal: 
-              CanonicalUser: !GetAtt rCloudfrontId.S3CanonicalUserId
+              Service: "cloudfront.amazonaws.com"
             StringLike:
               - "AWS:SourceArn": !Join ["/",["arn:aws:cloudfront::697289108405:distribution",!Ref rCloudfrontId]] 
