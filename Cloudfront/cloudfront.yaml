@@ -1,0 +1,65 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy a basic efs
+
+Parameters:
+  ps3:
+    Description: s3 name
+    Type: String
+    Default: lab1pacho
+
+Resources:
+  rs3:
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: Private
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+      BucketName: !Ref ps3
+  
+
+  rCloudfrontId:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig: 
+        Comment: "Test cloudformation"
+
+  rCloudfront:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig: 
+        Origins: 
+          - ConnectionAttempts: 3
+            ConnectionTimeout: 10
+            Id: Deploy-cloudfront
+            DomainName: !Join ["",[!Ref ps3,".s3.us-east-1.amazonaws.com"]]
+            S3OriginConfig: 
+              OriginAccessIdentity: !Join ["/",["origin-access-identity/cloudfront",!Ref rCloudfrontId]] 
+        DefaultCacheBehavior: 
+            AllowedMethods: 
+              - GET
+              - HEAD
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            ViewerProtocolPolicy: allow-all
+            TargetOriginId: Deploy-cloudfront
+        Enabled: true
+
+  SampleBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref rs3
+      PolicyDocument:
+
+        Version: "2008-10-17"
+        Statement: 
+
+          - Action: 
+              - "s3:GetObject"
+            Effect: "Allow"
+            Resource: !Join ["",[!GetAtt rs3.Arn,"/*"]]
+            Principal: 
+              CanonicalUser: !GetAtt rCloudfrontId.S3CanonicalUserId
+            StringLike:
+              - "AWS:SourceArn": !Join ["/",["arn:aws:cloudfront::697289108405:distribution",!Ref rCloudfrontId]] 
