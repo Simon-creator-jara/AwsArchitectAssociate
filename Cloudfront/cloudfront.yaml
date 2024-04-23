@@ -61,5 +61,5 @@ Resources:
             Resource: !Join ["",[!GetAtt rs3.Arn,"/*"]]
             Principal: 
               Service: "cloudfront.amazonaws.com"
-            StringLike:
+            StringEquals:
               - "AWS:SourceArn": !Join ["/",["arn:aws:cloudfront::697289108405:distribution",!Ref rCloudfrontId]] 
