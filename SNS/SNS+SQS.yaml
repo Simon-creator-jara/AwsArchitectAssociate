@@ -1,0 +1,29 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy rds
+
+Resources:
+  rSNS:
+    DependsOn: [rSQS]
+    Type: AWS::SNS::Topic
+    Properties:
+      ContentBasedDeduplication: true
+      FifoTopic: true
+      Subscription: 
+        - Endpoint: !GetAtt rSQS.Arn
+          Protocol: sqs
+      TopicName: SNSCloudformationCopy.fifo
+
+  rSQS:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      FifoQueue: true
+      DeduplicationScope: queue
+      FifoThroughputLimit: perQueue
+      MaximumMessageSize: 262144
+      MessageRetentionPeriod: 345600
+      QueueName: DemoCloudformation.fifo
+      ReceiveMessageWaitTimeSeconds: 2
+      SqsManagedSseEnabled: true
+      VisibilityTimeout: 20
