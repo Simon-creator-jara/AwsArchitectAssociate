@@ -1,0 +1,15 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy rds
+
+Resources:
+  rSQS:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      MaximumMessageSize: 262144
+      MessageRetentionPeriod: 345600
+      QueueName: DemoCloudformation
+      ReceiveMessageWaitTimeSeconds: 2
+      SqsManagedSseEnabled: true
+      VisibilityTimeout: 20
