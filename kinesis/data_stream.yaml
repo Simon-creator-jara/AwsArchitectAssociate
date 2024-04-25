@@ -1,0 +1,14 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy rds
+
+Resources:
+
+  rKstream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: KinesisStreamCloudformation
+      RetentionPeriodHours: 24
+      ShardCount: 2
+      StreamModeDetails: 
+          StreamMode: PROVISIONED
