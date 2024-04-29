@@ -1,0 +1,98 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy rds
+
+Resources:
+
+  rKstream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: KinesisStreamCloudformation
+      RetentionPeriodHours: 24
+      ShardCount: 2
+      StreamModeDetails: 
+          StreamMode: PROVISIONED
+
+  rs3:
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: Private
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+      BucketName: demokfh
+
+  rRoles3:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - firehose.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: Role Khf
+      Path: /
+      Policies: 
+        - PolicyName: s3
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement: 
+              - Action: 
+                  - "s3:AbortMultipartUpload"
+                  - "s3:GetBucketLocation"
+                  - "s3:GetObject"
+                  - "s3:ListBucket"
+                  - "s3:ListBucketMultipartUploads"
+                  - "s3:PutObject"
+                Effect: "Allow"
+                Resource: !Join ["/",[!Ref rs3,"*"]]
+      RoleName: RoleKFHs3
+
+  rRolekinesis:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - firehose.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: Role Khf
+      Path: /
+      Policies: 
+        - PolicyName: kinesis
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement: 
+              - Action: 
+                  - "kinesis:DescribeStream"
+                  - "kinesis:GetShardIterator"
+                  - "kinesis:GetRecords"
+                  - "kinesis:ListShards"
+                Effect: "Allow"
+                Resource: !GetAtt rKstream.Arn
+      RoleName: RoleKFHkinesis
+
+  rDeliveryStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: DemoCloudformationDSF
+      DeliveryStreamType: KinesisStreamAsSource
+      KinesisStreamSourceConfiguration: 
+        KinesisStreamARN: !GetAtt rKstream.Arn
+        RoleARN: !GetAtt rRolekinesis.Arn
+      S3DestinationConfiguration: 
+        BucketARN: !GetAtt rs3.Arn
+        BufferingHints: 
+          IntervalInSeconds: 60
+          SizeInMBs: 1
+        RoleARN: !GetAtt rRoles3.Arn
+
