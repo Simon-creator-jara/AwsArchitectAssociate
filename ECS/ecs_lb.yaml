@@ -357,4 +357,4 @@ Resources:
       ServiceConnectConfiguration: 
         Enabled: false
       ServiceName: Democloudformation
-      TaskDefinition: !GetAtt rtask
+      TaskDefinition: !GetAtt rtask.Arn
