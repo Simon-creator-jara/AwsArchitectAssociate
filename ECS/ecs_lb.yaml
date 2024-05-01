@@ -316,9 +316,9 @@ Resources:
       ContainerDefinitions: 
         - Image: nginxdemos/hello
           Name: Democloudformation
-      Cpu: 1
+      Cpu: 1 vCPU
       ExecutionRoleArn: arn:aws:iam::697289108405:role/ecsTaskExecutionRole
-      Memory: 3
+      Memory: 3 GB
       NetworkMode: awsvpc
       RequiresCompatibilities: 
         - FARGATE
