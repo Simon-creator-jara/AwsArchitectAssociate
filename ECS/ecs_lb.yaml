@@ -313,6 +313,7 @@ Resources:
   rtask:
     Type: AWS::ECS::TaskDefinition
     Properties:
+      Family: Democloudformation
       ContainerDefinitions: 
         - Image: nginxdemos/hello
           Name: Democloudformation
@@ -327,6 +328,7 @@ Resources:
         OperatingSystemFamily: LINUX
 
   rECSService:
+    DependsOn: [rtask]
     Type: AWS::ECS::Service
     Properties:
       Cluster: !Ref rECS
