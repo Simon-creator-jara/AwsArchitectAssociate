@@ -28,10 +28,6 @@ Parameters:
     Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
     Default: "/aws/service/ecs/optimized-ami/amazon-linux-2/kernel-5.10/recommended/image_id"
 
-  pnameELB:
-    Description: Name ELB
-    Type: String
-
 Resources:
 
   rSecGroup:
@@ -72,7 +68,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       IpAddressType: ipv4
-      Name: !Ref pnameELB
+      Name: demoecs
       Scheme: internet-facing
       SecurityGroups: 
         - !Ref rSecGroupELB
@@ -332,7 +328,7 @@ Resources:
         OperatingSystemFamily: LINUX
 
   rECSService:
-    DependsOn: [rtask]
+    DependsOn: [rtask,rlistener]
     Type: AWS::ECS::Service
     Properties:
       Cluster: !Ref rECS
@@ -363,4 +359,4 @@ Resources:
       ServiceConnectConfiguration: 
         Enabled: false
       ServiceName: Democloudformation
-      TaskDefinition: "arn:aws:ecs:us-east-1:697289108405:task-definition/Democloudformation:1"
+      TaskDefinition: !Ref rtask
