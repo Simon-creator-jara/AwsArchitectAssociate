@@ -317,6 +317,10 @@ Resources:
       ContainerDefinitions: 
         - Image: nginxdemos/hello
           Name: Democloudformation
+          PortMappings: 
+            - ContainerPort: 80
+              AppProtocol: http 
+              Protocol: tcp
       Cpu: 1 vCPU
       ExecutionRoleArn: arn:aws:iam::697289108405:role/ecsTaskExecutionRole
       Memory: 3 GB
