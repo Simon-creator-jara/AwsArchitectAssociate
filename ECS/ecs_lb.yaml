@@ -357,4 +357,4 @@ Resources:
       ServiceConnectConfiguration: 
         Enabled: false
       ServiceName: Democloudformation
-      TaskDefinition: !GetAtt rtask.Arn
+      TaskDefinition: "arn:aws:ecs:us-east-1:697289108405:task-definition/Democloudformation:1"
