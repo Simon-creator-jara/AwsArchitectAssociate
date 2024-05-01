@@ -82,7 +82,6 @@ Resources:
       Type: application
   
   rTargetGroup:
-    DependsOn: [rInstance2,rInstance1]
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckEnabled: true
