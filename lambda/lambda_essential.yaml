@@ -1,0 +1,52 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy a basic 
+
+Resources:
+
+  rRole: 
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: Role for lambda
+      Path: /
+      Policies:
+        - PolicyName: lambdarole
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: logs:*
+                Resource: "*"
+
+  rLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures: 
+        - x86_64
+      Code: 
+        ZipFile: |
+          import json
+          print('Loading function')
+          def lambda_handler(event, context):
+              #print("Received event: " + json.dumps(event, indent=2))
+              print("value1 = " + event['key1'])
+              print("value2 = " + event['key2'])
+              print("value3 = " + event['key3'])
+              return event['key1']  # Echo back the first key value
+              #raise Exception('Something went wrong')
+      Description: Testing lambda
+      FunctionName: LambdaCloud
+      Handler: lambda_handler
+      MemorySize: 128
+      PackageType: Zip
+      Role: !GetAtt rRole.Arn
+      Runtime: python3.10
