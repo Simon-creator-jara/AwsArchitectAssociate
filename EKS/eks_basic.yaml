@@ -1,0 +1,67 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy a basic 
+
+Parameters:
+
+  pvpcId:
+    Description: vpc ID
+    Type: String
+
+  psubnetId:
+    Description: subnet ID
+    Type: String
+    
+  psubnetId2:
+    Description: subnet ID
+    Type: String
+
+Resources:
+  rSecGroupELB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EC2 security group elb
+      GroupName: GroupTest
+      SecurityGroupEgress: 
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref pvpcId
+
+  rCluster:
+    Type: AWS::EKS::Cluster
+    Properties:
+      AccessConfig: 
+        AuthenticationMode: API_AND_CONFIG_MAP
+        BootstrapClusterCreatorAdminPermissions: true
+      KubernetesNetworkConfig: 
+        IpFamily: ipv4
+      Name: DemoCloudformation
+      ResourcesVpcConfig: 
+        EndpointPrivateAccess: false
+        EndpointPublicAccess: true
+        SecurityGroupIds: 
+          - !Ref rSecGroupELB
+        SubnetIds: 
+          - !Ref psubnetId
+          - !Ref psubnetId2
+      RoleArn: arn:aws:iam::697289108405:role/eksclusterrole
+
+  rNodeGroup:
+    DependsOn: [rCluster]
+    Type: AWS::EKS::Nodegroup
+    Properties:
+      CapacityType: ON_DEMAND
+      ClusterName: DemoCloudformation
+      ForceUpdateEnabled: true
+      InstanceTypes: 
+        - t3.medium
+      NodegroupName: Demotest
+      NodeRole: arn:aws:iam::697289108405:role/AmazonEKSNodeRole
+      Subnets: 
+        - !Ref psubnetId
+        - !Ref psubnetId2
