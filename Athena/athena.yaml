@@ -1,0 +1,27 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy a basic efs
+
+Parameters:
+  pcatalogid:
+    Description: catalog id
+    Type: String
+
+Resources:
+
+  rCatalog:
+    Type: AWS::Athena::DataCatalog
+    Properties:
+      Description: Test deploy
+      Name: Test
+      Parameters: 
+        catalog-id: !Ref pcatalogid
+      Type: GLUE
+
+  rWorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Description: Test
+      Name: Test
+      State: ENABLED
+
