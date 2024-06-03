@@ -58,5 +58,5 @@ Resources:
       GlueVersion: 4.0
       MaxRetries: 2
       Name: TestG
-      WorkerType: G.4X
+      WorkerType: G.2X
       Role: !Ref rRole
