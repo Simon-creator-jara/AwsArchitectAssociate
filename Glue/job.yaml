@@ -24,7 +24,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Description: Glue
-      Path: \
+      Path: /
       Policies: 
         - PolicyName: root
           PolicyDocument:
