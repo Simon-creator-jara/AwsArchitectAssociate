@@ -6,7 +6,7 @@ Parameters:
   ps3:
     Description: s3 name
     Type: String
-    Default: testglue
+    Default: testgluecloudf
 
 
 Resources:
