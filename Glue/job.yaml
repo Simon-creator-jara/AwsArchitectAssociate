@@ -50,7 +50,7 @@ Resources:
     Properties:
       Command: 
         Name: glueetl
-        ScriptLocation: !Ref rs3
+        ScriptLocation: !Join ["", ["s3://",!Ref ps3,"/"]]
       Description: Test
       ExecutionClass: FLEX
       GlueVersion: 4.0
