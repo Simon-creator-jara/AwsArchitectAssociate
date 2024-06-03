@@ -1,0 +1,61 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy a basic
+
+Parameters:
+  ps3:
+    Description: s3 name
+    Type: String
+    Default: test
+
+
+Resources:
+
+  rRole: 
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: Glue
+      Path: \
+      Policies: 
+        - PolicyName: root
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
+      RoleName: Gluetest
+
+  rs3:
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: Private
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+      BucketName: !Ref ps3
+
+  rjob:
+    Type: AWS::Glue::Job
+    Properties:
+      Command: 
+        Name: glueetl
+        PythonVersion: 3.9
+        Runtime: Python
+        ScriptLocation: !Ref rs3
+      Description: Test
+      ExecutionClass: FLEX
+      GlueVersion: Glue 4.0
+      MaxRetries: 2
+      Name: TestG
+      Role: !Ref rRole
