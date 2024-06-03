@@ -50,7 +50,7 @@ Resources:
     Properties:
       Command: 
         Name: glueetl
-        PythonVersion: 3.9
+        PythonVersion: 3
         Runtime: Python
         ScriptLocation: !Ref rs3
       Description: Test
