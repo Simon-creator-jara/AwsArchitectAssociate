@@ -55,7 +55,7 @@ Resources:
         ScriptLocation: !Ref rs3
       Description: Test
       ExecutionClass: FLEX
-      GlueVersion: Glue 4.0
+      GlueVersion: 4.0
       MaxRetries: 2
       Name: TestG
       Role: !Ref rRole
