@@ -7,25 +7,26 @@ Resources:
     Type: AWS::CloudWatch::Dashboard
     Properties:
       DashboardBody: 
-        {
-            "widgets": [
-                {
-                    "type": "metric",
-                    "x": 0,
-                    "y": 0,
-                    "width": 24,
-                    "height": 6,
-                    "properties": {
-                        "view": "timeSeries",
-                        "stacked": false,
-                        "metrics": [
-                            [ "AWS/S3", "NumberOfObjects", "BucketName", "bucketawsconfiglab21", "StorageType", "AllStorageTypes", { "period": 86400, "region": "us-east-1" } ],
-                            [ ".", "BucketSizeBytes", ".", "cf-templates-1mi3z6n2u4l5o-us-east-1", ".", "StandardStorage", { "period": 86400 } ]
-                        ],
-                        "region": "us-east-1",
-                        "period": 300
-                    }
-                }
-            ]
-        }
+        Fn::Subs: |
+          {
+              "widgets": [
+                  {
+                      "type": "metric",
+                      "x": 0,
+                      "y": 0,
+                      "width": 24,
+                      "height": 6,
+                      "properties": {
+                          "view": "timeSeries",
+                          "stacked": false,
+                          "metrics": [
+                              [ "AWS/S3", "NumberOfObjects", "BucketName", "bucketawsconfiglab21", "StorageType", "AllStorageTypes", { "period": 86400, "region": "us-east-1" } ],
+                              [ ".", "BucketSizeBytes", ".", "cf-templates-1mi3z6n2u4l5o-us-east-1", ".", "StandardStorage", { "period": 86400 } ]
+                          ],
+                          "region": "us-east-1",
+                          "period": 300
+                      }
+                  }
+              ]
+          }
       DashboardName: testclf
