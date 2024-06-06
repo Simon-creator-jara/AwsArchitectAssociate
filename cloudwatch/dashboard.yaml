@@ -7,7 +7,7 @@ Resources:
     Type: AWS::CloudWatch::Dashboard
     Properties:
       DashboardBody: 
-        Fn::Subs: |
+        Fn::Sub: |
           {
               "widgets": [
                   {
