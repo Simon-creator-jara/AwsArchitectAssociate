@@ -1,0 +1,22 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy a basic efs
+
+Resources:
+  rcloudwatchalarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: TestCloudformation
+      AlarmName: Test
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Metrics: 
+        - Id: m1
+          MetricStat: 
+              Metric: 
+                MetricName: Table Metrics
+                Namespace: DynamoDB
+              Period: 60
+              Stat: Average
+      Threshold: 5
+
