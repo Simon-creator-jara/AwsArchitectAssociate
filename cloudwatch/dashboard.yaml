@@ -20,8 +20,8 @@ Resources:
                           "view": "timeSeries",
                           "stacked": false,
                           "metrics": [
-                              [ "AWS/S3", "NumberOfObjects", "BucketName", "bucketawsconfiglab21", "StorageType", "AllStorageTypes", { "period": 86400, "region": "us-east-1" } ],
-                              [ ".", "BucketSizeBytes", ".", "cf-templates-1mi3z6n2u4l5o-us-east-1", ".", "StandardStorage", { "period": 86400 } ]
+                              [ "AWS/S3", "NumberOfObjects", "BucketName", "bucket", "StorageType", "AllStorageTypes", { "period": 86400, "region": "us-east-1" } ],
+                              [ ".", "BucketSizeBytes", ".", "cf-temp", ".", "StandardStorage", { "period": 86400 } ]
                           ],
                           "region": "us-east-1",
                           "period": 300
