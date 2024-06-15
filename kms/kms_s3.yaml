@@ -1,0 +1,69 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloud formation is to deploy a basic efs
+
+Parameters:
+  ps3:
+    Description: s3 name
+    Type: String
+    Default: kms
+
+Resources:
+  rkey:
+    Type: AWS::KMS::Key
+    Properties:
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy: 
+        Version: "2012-10-17"
+        Id: politicas-llave
+        Statement:
+          - Sid: Habilitar uso de KMS
+            Effect: Allow
+            Principal: 
+              AWS: !Join ["",["arn:aws:iam::", !Ref 'AWS::AccountId', ":root"]]
+            Action: 
+              - 'kms:*'
+            Resource: '*'
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      Origin: AWS_KMS
+      PendingWindowInDays: 7
+
+  MyKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/my-key-alias-${AWS::StackName}"
+      TargetKeyId: !Ref rkey
+
+  rs3:
+    Type: AWS::S3::Bucket
+    DependsOn: [rkey,MyKmsKeyAlias]
+    Properties: 
+      AccessControl: Private
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'aws:kms'
+              KMSMasterKeyID: !GetAtt rkey.Arn
+            BucketKeyEnabled: true
+      BucketName: !Ref ps3
+
+  SampleBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DependsOn: [rs3]
+    Properties:
+      Bucket: !Ref rs3
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: 
+              - "s3:GetObject"
+            Effect: "Allow"
+            Resource: "arn:aws:s3:::kms/*"
+            Principal: "*"
+            Condition:
+              StringEquals:
+                "kms:ViaService": !Sub "s3.${AWS::Region}.amazonaws.com"
+
